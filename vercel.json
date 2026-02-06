@@ -1,5 +1,17 @@
 {
+  "version": 2,
+  "buildCommand": "pnpm run build:vercel",
+  "outputDirectory": "dist/public",
+  "functions": {
+    "api/[[...path]].ts": {
+      "includeFiles": "data/**"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
