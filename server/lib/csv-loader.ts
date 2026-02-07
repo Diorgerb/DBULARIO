@@ -1,14 +1,14 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const CSV_PATH = path.join(
-  __dirname,
-  "../../data/StatusBulasANVISA.csv"
+const DEFAULT_CSV_PATH = path.resolve(
+  process.cwd(),
+  "data/StatusBulasANVISA.csv"
 );
+
+const CSV_PATH = process.env.CSV_PATH
+  ? path.resolve(process.env.CSV_PATH)
+  : DEFAULT_CSV_PATH;
 
 /* -------------------- CSV PARSER -------------------- */
 function parseCSV(content: string) {
@@ -81,7 +81,10 @@ function loadCSV() {
   if (CACHE) return CACHE;
 
   if (!fs.existsSync(CSV_PATH)) {
-    console.error("[CSV] File not found:", CSV_PATH);
+    console.error(
+      `[CSV] File not found at "${CSV_PATH}". ` +
+        `Set CSV_PATH or provide the CSV at "${DEFAULT_CSV_PATH}".`
+    );
     return [];
   }
 
