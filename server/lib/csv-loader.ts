@@ -14,11 +14,9 @@ const CSV_PATH = path.join(
 /* -------------------- CSV PARSER -------------------- */
 export function parseCSV(content: string) {
   const parsed = parse(content, {
-    columns: true,
+    columns: (header) => header.map((column) => column.trim()),
     skip_empty_lines: true,
     trim: true,
-    relax_quotes: true,
-    relax_column_count: true,
     bom: true,
   }) as Record<string, string>[];
 
