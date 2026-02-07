@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(__dirname, "../../data");
+const dataDir = path.join(process.cwd(), "data");
 
 // Parse CSV manually
 function parseCSV(content: string) {

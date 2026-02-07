@@ -1,6 +1,6 @@
 {
   "buildCommand": "pnpm run build:vercel",
-  "outputDirectory": "dist",
+  "outputDirectory": "dist/public",
   "functions": {
     "api/index.ts": {
       "runtime": "nodejs20.x"

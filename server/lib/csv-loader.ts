@@ -6,8 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CSV_PATH = path.join(
-  __dirname,
-  "../../data/StatusBulasANVISA.csv"
+  process.cwd(),
+  "data/StatusBulasANVISA.csv"
 );
 
 /* -------------------- CSV PARSER -------------------- */
