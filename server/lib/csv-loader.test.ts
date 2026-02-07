@@ -6,6 +6,7 @@ import {
   getMedicationStats,
   getMedicationById,
   getRecentUpdates,
+  parseCSV,
 } from "./csv-loader";
 
 describe("CSV Loader", () => {
@@ -76,6 +77,24 @@ describe("CSV Loader", () => {
     it("should get recent updates", () => {
       const updates = getRecentUpdates(7);
       expect(Array.isArray(updates)).toBe(true);
+    });
+  });
+
+  describe("parseCSV", () => {
+    it("should handle commas and escaped quotes inside fields", () => {
+      const csv = [
+        "idProduto,numeroRegistro,nomeProduto,razaoSocial",
+        '1,12345,"Medicamento ""Especial""","Empresa, LTDA"',
+        '2,67890,"Outro Produto","Outra Empresa"',
+      ].join("\n");
+
+      const records = parseCSV(csv);
+
+      expect(records[0].numeroRegistro).toBe("12345");
+      expect(records[0].nomeProduto).toBe('Medicamento "Especial"');
+      expect(records[0].razaoSocial).toBe("Empresa, LTDA");
+      expect(records[1].numeroRegistro).toBe("67890");
+      expect(records[1].nomeProduto).toBe("Outro Produto");
     });
   });
 });

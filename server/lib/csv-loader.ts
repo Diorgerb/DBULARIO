@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { parse } from "csv-parse/sync";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,45 +12,26 @@ const CSV_PATH = path.join(
 );
 
 /* -------------------- CSV PARSER -------------------- */
-function parseCSV(content: string) {
-  const lines = content.split(/\r?\n/);
-  const headers = lines[0]
-    .split(",")
-    .map((h) => h.trim().replace(/^"|"$/g, ""));
+export function parseCSV(content: string) {
+  const parsed = parse(content, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_quotes: true,
+    relax_column_count: true,
+    bom: true,
+  }) as Record<string, string>[];
 
-  const records: any[] = [];
+  return parsed.map((record) => {
+    const normalized: Record<string, string> = {};
 
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i]?.trim()) continue;
-
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        values.push(current);
-        current = "";
-      } else {
-        current += char;
-      }
+    for (const [key, value] of Object.entries(record)) {
+      normalized[key.trim()] =
+        value === undefined || value === null ? "" : String(value);
     }
-    values.push(current);
 
-    const record: any = {};
-    headers.forEach((h, idx) => {
-      record[h] = (values[idx] || "")
-        .replace(/^"|"$/g, "")
-        .trim();
-    });
-
-    records.push(record);
-  }
-
-  return records;
+    return normalized;
+  });
 }
 
 /* -------------------- NORMALIZAÇÃO -------------------- */
