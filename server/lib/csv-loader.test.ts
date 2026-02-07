@@ -67,9 +67,11 @@ describe("CSV Loader", () => {
 
   describe("getMedicationById", () => {
     it("should get medication by id", () => {
-      const med = getMedicationById(1);
+      const medications = loadMedications();
+      const sampleId = medications[0]?.id ?? 1;
+      const med = getMedicationById(sampleId);
       expect(med).not.toBeNull();
-      expect(med?.id).toBe(1);
+      expect(med?.id).toBe(sampleId);
     });
   });
 

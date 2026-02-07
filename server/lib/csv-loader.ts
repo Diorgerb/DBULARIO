@@ -74,6 +74,10 @@ function loadCSV() {
   return CACHE;
 }
 
+export function loadMedications() {
+  return loadCSV();
+}
+
 /* -------------------- LISTAGEM -------------------- */
 export function listMedications(
   page = 1,
@@ -177,6 +181,8 @@ export function getMedicationById(id: number) {
 /* -------------------- ESTATÍSTICAS -------------------- */
 export function getMedicationStats() {
   const data = loadCSV();
+  const activeCount = data.filter((m) => m.status === "ativo").length;
+  const inactiveCount = data.filter((m) => m.status !== "ativo").length;
   const now = new Date();
 
   const last7 = new Date();
@@ -188,17 +194,24 @@ export function getMedicationStats() {
   const last90 = new Date();
   last90.setDate(now.getDate() - 90);
 
+  const updatedLast7Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last7
+  ).length;
+  const updatedLast30Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last30
+  ).length;
+  const updatedLast90Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last90
+  ).length;
+
   return {
     total: data.length,
-    updatedLast7Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last7
-    ).length,
-    updatedLast30Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last30
-    ).length,
-    updatedLast90Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last90
-    ).length,
+    active: activeCount,
+    inactive: inactiveCount,
+    updated: updatedLast30Days,
+    updatedLast7Days,
+    updatedLast30Days,
+    updatedLast90Days,
   };
 }
 
@@ -214,5 +227,5 @@ export function getRecentUpdates(days = 7) {
       (a, b) =>
         b.publicationDate.getTime() - a.publicationDate.getTime()
     )
-    .slice(0, 50);
+    .slice(0, 20);
 }
