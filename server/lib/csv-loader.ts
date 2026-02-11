@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { parse } from "csv-parse/sync";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,45 +12,24 @@ const CSV_PATH = path.join(
 );
 
 /* -------------------- CSV PARSER -------------------- */
-function parseCSV(content: string) {
-  const lines = content.split(/\r?\n/);
-  const headers = lines[0]
-    .split(",")
-    .map((h) => h.trim().replace(/^"|"$/g, ""));
+export function parseCSV(content: string) {
+  const parsed = parse(content, {
+    columns: (header) => header.map((column) => column.trim()),
+    skip_empty_lines: true,
+    trim: true,
+    bom: true,
+  }) as Record<string, string>[];
 
-  const records: any[] = [];
+  return parsed.map((record) => {
+    const normalized: Record<string, string> = {};
 
-  for (let i = 1; i < lines.length; i++) {
-    if (!lines[i]?.trim()) continue;
-
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        values.push(current);
-        current = "";
-      } else {
-        current += char;
-      }
+    for (const [key, value] of Object.entries(record)) {
+      normalized[key.trim()] =
+        value === undefined || value === null ? "" : String(value);
     }
-    values.push(current);
 
-    const record: any = {};
-    headers.forEach((h, idx) => {
-      record[h] = (values[idx] || "")
-        .replace(/^"|"$/g, "")
-        .trim();
-    });
-
-    records.push(record);
-  }
-
-  return records;
+    return normalized;
+  });
 }
 
 /* -------------------- NORMALIZAÇÃO -------------------- */
@@ -92,6 +72,10 @@ function loadCSV() {
   console.log(`[CSV] Loaded ${CACHE.length} medications from CSV`);
 
   return CACHE;
+}
+
+export function loadMedications() {
+  return loadCSV();
 }
 
 /* -------------------- LISTAGEM -------------------- */
@@ -197,6 +181,8 @@ export function getMedicationById(id: number) {
 /* -------------------- ESTATÍSTICAS -------------------- */
 export function getMedicationStats() {
   const data = loadCSV();
+  const activeCount = data.filter((m) => m.status === "ativo").length;
+  const inactiveCount = data.filter((m) => m.status !== "ativo").length;
   const now = new Date();
 
   const last7 = new Date();
@@ -208,17 +194,24 @@ export function getMedicationStats() {
   const last90 = new Date();
   last90.setDate(now.getDate() - 90);
 
+  const updatedLast7Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last7
+  ).length;
+  const updatedLast30Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last30
+  ).length;
+  const updatedLast90Days = data.filter(
+    (m) => m.publicationDate && m.publicationDate >= last90
+  ).length;
+
   return {
     total: data.length,
-    updatedLast7Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last7
-    ).length,
-    updatedLast30Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last30
-    ).length,
-    updatedLast90Days: data.filter(
-      (m) => m.publicationDate && m.publicationDate >= last90
-    ).length,
+    active: activeCount,
+    inactive: inactiveCount,
+    updated: updatedLast30Days,
+    updatedLast7Days,
+    updatedLast30Days,
+    updatedLast90Days,
   };
 }
 
@@ -234,5 +227,5 @@ export function getRecentUpdates(days = 7) {
       (a, b) =>
         b.publicationDate.getTime() - a.publicationDate.getTime()
     )
-    .slice(0, 50);
+    .slice(0, 20);
 }

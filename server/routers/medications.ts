@@ -79,10 +79,10 @@ export const medicationsRouter = router({
   getById: publicProcedure
     .input(
       z.object({
-        idProduto: z.number().int().positive(),
+        id: z.number().int().positive(),
       })
     )
     .query(({ input }) => {
-      return getMedicationById(input.idProduto);
+      return getMedicationById(input.id);
     }),
 });
